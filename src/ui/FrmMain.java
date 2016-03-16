@@ -1,6 +1,5 @@
 package ui;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.util.List;
 
@@ -8,19 +7,12 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-
 import model.data.Customer;
 import model.service.CustomerService;
 
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-
-import jdk.nashorn.internal.scripts.JO;
-
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -33,6 +25,10 @@ import java.awt.event.InputEvent;
 
 public class FrmMain extends JFrame {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private JTable tblCustomer;
 	JScrollPane scrollPane = new JScrollPane();
@@ -71,7 +67,11 @@ public class FrmMain extends JFrame {
 			customer.setAddress(JOptionPane.showInputDialog("Địa chỉ"));
 			customer.setNote(JOptionPane.showInputDialog("Ghi chú"));
 			
-			customerService.addCustomer(customer);
+			if (customerService.addCustomer(customer) == true) {
+				
+			} else {
+				JOptionPane.showMessageDialog(null, "Lỗi");
+			}
 			refresh();
 		}
 	}
@@ -122,7 +122,8 @@ public class FrmMain extends JFrame {
 					customer.setNote(JOptionPane.showInputDialog("Ghi chú", customer.getNote()));
 					break;
 				}
-				customerService.updateCustomer(customer);	
+				customerService.deleteCustomer(customer.getPhone());
+				customerService.addCustomer(customer);	
 			} else {
 				JOptionPane.showMessageDialog(null, "Xin chọn ô cần sửa");
 			}
@@ -165,6 +166,11 @@ public class FrmMain extends JFrame {
 		mntmAdd.addActionListener(new addActionListener());
 		mntmAdd.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_MASK));
 		mnFile.add(mntmAdd);
+		
+		JMenuItem mntmXa = new JMenuItem("Xóa");
+		mntmXa.addActionListener(new deleteActionListener());
+		mntmXa.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK));
+		mnFile.add(mntmXa);
 		
 		JMenuItem menuItem = new JMenuItem("Refresh");
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
@@ -215,6 +221,7 @@ public class FrmMain extends JFrame {
 		JButton btnXa = new JButton("Xóa");
 		btnXa.addActionListener(new deleteActionListener());
 		btnXa.setBounds(555, 151, 89, 23);
+		
 		contentPane.add(btnXa);
 	}
 }

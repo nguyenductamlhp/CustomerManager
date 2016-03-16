@@ -13,8 +13,7 @@ import utils.ConnectionPool;
 
 public class CustomerService {
 	
-	@SuppressWarnings("rawtypes")
-	public List getAllCustomer()  {
+	public List<Customer> getAllCustomer()  {
 		List<Customer> list = new ArrayList<>();
 		
 		try {
@@ -45,8 +44,17 @@ public class CustomerService {
 		return list;
 	}
 	
+	public boolean isExist(String phone) {
+		List<Customer> listCustom = getAllCustomer();
+		for (Customer customer : listCustom) {
+			if (customer.getPhone().equals(phone)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public Customer getCustomer(String phone) throws SQLException {
-		@SuppressWarnings("unchecked")
 		List<Customer> CustomerList = getAllCustomer();
 		for (Customer customer : CustomerList) {
 			if (customer.getPhone().equals(phone)) {
@@ -60,19 +68,23 @@ public class CustomerService {
 		ConnectionPool connectionPool = new ConnectionPool();
 		Connection connection;
 		try {
-			connection = connectionPool.getConnection();
-			
-			String updateCustomer = "update custom set phone='" + c.getPhone() + "' , address='";
-			updateCustomer +=  c.getName() + "', address='";
-			updateCustomer +=  c.getAddress() + "', note='";
-			updateCustomer +=  c.getNote() + "' where phone='" + c.getPhone() + "'";
-			
-			Statement statement;
-			statement = connection.createStatement();
-			statement.executeUpdate(updateCustomer);
-			
-			connection.close();
-			return true;
+			if (isExist(c.getPhone())) {
+				return false;
+			} else {
+				connection = connectionPool.getConnection();
+				
+				String updateCustomer = "update custom set phone='" + c.getPhone() + "' , address='";
+				updateCustomer +=  c.getName() + "', address='";
+				updateCustomer +=  c.getAddress() + "', note='";
+				updateCustomer +=  c.getNote() + "' where phone='" + c.getPhone() + "'";
+				
+				Statement statement;
+				statement = connection.createStatement();
+				statement.executeUpdate(updateCustomer);
+				
+				connection.close();
+				return true;
+			}
 		} catch (SQLException e) {
 			
 			e.printStackTrace();
@@ -85,17 +97,21 @@ public class CustomerService {
 		ConnectionPool connectionPool = new ConnectionPool();
 		Connection connection;
 		try {
-			connection = connectionPool.getConnection();
-			String insertCustomer = "insert into custom values ('" + c.getPhone() + "', '";
-			insertCustomer += c.getName() + "', '";
-			insertCustomer += c.getAddress() + "', '";
-			insertCustomer += c.getNote() + "') ";		
-			
-			Statement statement;
-			statement = connection.createStatement();
-			statement.executeUpdate(insertCustomer);
-			connection.close();
-			return true;
+			if (isExist(c.getPhone())) {
+				return false;
+			} else {
+				connection = connectionPool.getConnection();
+				String insertCustomer = "insert into custom values ('" + c.getPhone() + "', '";
+				insertCustomer += c.getName() + "', '";
+				insertCustomer += c.getAddress() + "', '";
+				insertCustomer += c.getNote() + "') ";		
+				
+				Statement statement;
+				statement = connection.createStatement();
+				statement.executeUpdate(insertCustomer);
+				connection.close();
+				return true;
+			}
 		} catch (SQLException e) {
 			
 			e.printStackTrace();
