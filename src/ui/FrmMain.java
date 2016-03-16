@@ -1,6 +1,7 @@
 package ui;
 
 import java.awt.EventQueue;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
@@ -22,6 +23,9 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 import java.awt.event.KeyEvent;
 import java.awt.event.InputEvent;
+import java.awt.Font;
+import javax.swing.JTextField;
+import javax.swing.JLabel;
 
 public class FrmMain extends JFrame {
 
@@ -32,26 +36,43 @@ public class FrmMain extends JFrame {
 	private JPanel contentPane;
 	private JTable tblCustomer;
 	JScrollPane scrollPane = new JScrollPane();
-	
-	CustomerService customerService = new CustomerService();
-	
-	private Object[][] getTableData() {		
 		
-		List<Customer> list = customerService.getAllCustomer();
-		Object[][] objects = new Object[list.size()][6];
-		for (int i = 0; i < list.size(); i++) {
-			objects[i][0] = list.get(i).getPhone();
-			objects[i][1] = list.get(i).getName();
-			objects[i][2] = list.get(i).getAddress();
-			objects[i][3] = list.get(i).getNote();
+	private JTextField txtPhone;
+	private JTextField txtName;
+	private JTextField txtAddress;
+	private JTextField txtNote;
+	
+	private static JTextField txtFind = new JTextField("0");
+	
+
+	CustomerService customerService = new CustomerService();
+		
+	private Object[][] getTableData() {		
+		String key = txtFind.getText();
+		List<Customer> listAllCustomer = customerService.getAllCustomer();
+		
+		List<Customer> reList = new ArrayList<>();
+		
+		for (Customer customer : listAllCustomer) {
+			if (customer.getPhone().contains(key.trim())) {
+				reList.add(customer);
+			}
+		}
+		Object[][] objects = new Object[listAllCustomer.size()][4];
+		for (int i = 0; i < listAllCustomer.size(); i++) {
+			objects[i][0] = listAllCustomer.get(i).getPhone();
+			objects[i][1] = listAllCustomer.get(i).getName();
+			objects[i][2] = listAllCustomer.get(i).getAddress();
+			objects[i][3] = listAllCustomer.get(i).getNote();
 		}
 		
 		return objects;
 	}
 	
 	private String[] tableHeader = { "Điện thoại", "Tên", "Địa chỉ", "Ghi chú" };
-
+	
 	private void refresh() {
+		
 		tblCustomer.setModel(new DefaultTableModel(getTableData(), tableHeader));
 		tblCustomer.setColumnSelectionAllowed(true);
 		scrollPane.setViewportView(tblCustomer);
@@ -62,16 +83,21 @@ public class FrmMain extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			Customer customer = new Customer();
-			customer.setPhone(JOptionPane.showInputDialog("Số điện thoại"));
-			customer.setName(JOptionPane.showInputDialog("Họ tên"));
-			customer.setAddress(JOptionPane.showInputDialog("Địa chỉ"));
-			customer.setNote(JOptionPane.showInputDialog("Ghi chú"));
+			customer.setPhone(txtPhone.getText());
+			customer.setName(txtName.getText());
+			customer.setAddress(txtAddress.getText());
+			customer.setNote(txtNote.getText());
 			
-			if (customerService.addCustomer(customer) == true) {
-				
+			if (customerService.addCustomer(customer)) {
+				JOptionPane.showMessageDialog(null, "Đã thêm");
 			} else {
-				JOptionPane.showMessageDialog(null, "Lỗi");
-			}
+				JOptionPane.showMessageDialog(null, "Không thể thêm người này");				
+			}			
+			txtPhone.setText("");
+			txtName.setText("");
+			txtAddress.setText("");
+			txtNote.setText("");
+			
 			refresh();
 		}
 	}
@@ -132,6 +158,26 @@ public class FrmMain extends JFrame {
 		}		
 	}
 	
+	private class findActionListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String key = txtFind.getText();
+			List<Customer> list = customerService.findCustomer(key);
+			Object[][] objects = new Object[list.size()][4];
+			for (int i = 0; i < list.size(); i++) {
+				objects[i][0] = list.get(i).getPhone();
+				objects[i][1] = list.get(i).getName();
+				objects[i][2] = list.get(i).getAddress();
+				objects[i][3] = list.get(i).getNote();
+			}
+			tblCustomer.setModel(new DefaultTableModel(objects, tableHeader));
+			tblCustomer.setColumnSelectionAllowed(true);
+			scrollPane.setViewportView(tblCustomer);
+		}
+		
+	}
+	
 	/**
 	 * Launch the application.
 	 */
@@ -148,13 +194,14 @@ public class FrmMain extends JFrame {
 		});
 	}
 
+	
 	/**
 	 * Create the frame.
 	 */
 	public FrmMain() {
 		setTitle("Quản lý khách hàng");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 670, 343);
+		setBounds(100, 100, 946, 489);
 		
 		JMenuBar menuBar = new JMenuBar();
 		setJMenuBar(menuBar);
@@ -169,10 +216,25 @@ public class FrmMain extends JFrame {
 		
 		JMenuItem mntmXa = new JMenuItem("Xóa");
 		mntmXa.addActionListener(new deleteActionListener());
+		
+		JMenuItem mntmSa = new JMenuItem("Sửa");
+		mntmSa.addActionListener(new updateActionListener());
+		mntmSa.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+		mnFile.add(mntmSa);
+		
+		JMenuItem mntmTmKim = new JMenuItem("Tìm kiếm");
+		mntmTmKim.addActionListener(new findActionListener());
+		mntmTmKim.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_MASK));
+		mnFile.add(mntmTmKim);
 		mntmXa.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK));
 		mnFile.add(mntmXa);
 		
 		JMenuItem menuItem = new JMenuItem("Refresh");
+		menuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				refresh();
+			}
+		});
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0));
 		mnFile.add(menuItem);
 		
@@ -182,15 +244,31 @@ public class FrmMain extends JFrame {
 		JMenuItem mntmAuthor = new JMenuItem("Author");
 		mntmAuthor.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, "Tác giả: Nguyễn Đức Tâm. Mọi đóng góp xin gửi về: nguyenductamlhp@gmail.com");
+				String info = "Tác giả: Nguyễn Đức Tâm.\n";
+				info += "Mọi đóng góp xin gửi về: nguyenductamlhp@gmail.com";
+				JOptionPane.showMessageDialog(null, info);
 			}
 		});
+		
+		JMenuItem mntmHngDn = new JMenuItem("Hướng dẫn");
+		mntmHngDn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String guide = "Hướng dẫn \n";
+				guide += "Ctrl + A : Thêm mới \n";
+				guide += "Ctrl + S : Sửa \n";
+				guide += "Ctrl + D : Xóa \n";
+				guide += "F5 : Refresh";
+				JOptionPane.showMessageDialog(null, guide);
+				
+			}
+		});
+		mnAbout.add(mntmHngDn);
 		mnAbout.add(mntmAuthor);
 		
 		JMenuItem mntmTool = new JMenuItem("Tool");
 		mntmTool.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				JOptionPane.showMessageDialog(null, "Customer Manager version 1.0");
+				JOptionPane.showMessageDialog(null, "Customer Manager version 1.1");
 			}
 		});
 		mnAbout.add(mntmTool);
@@ -200,28 +278,85 @@ public class FrmMain extends JFrame {
 		contentPane.setLayout(null);
 		
 		
-		scrollPane.setBounds(30, 20, 500, 250);
+		scrollPane.setBounds(30, 20, 596, 367);
 		contentPane.add(scrollPane);
 		
 		tblCustomer = new JTable();
+		tblCustomer.setCellSelectionEnabled(true);
+		tblCustomer.setFont(new Font("Times New Roman", Font.PLAIN, 13));
 		tblCustomer.setModel(new DefaultTableModel(getTableData(), tableHeader));
 		tblCustomer.setColumnSelectionAllowed(true);
 		scrollPane.setViewportView(tblCustomer);
 		
 		JButton btnAdd = new JButton("Thêm");
 		btnAdd.addActionListener(new addActionListener());
-		btnAdd.setBounds(555, 35, 89, 23);
+		btnAdd.setBounds(802, 364, 89, 23);
 		contentPane.add(btnAdd);
 		
 		JButton btnUpdate = new JButton("Sửa");
 		btnUpdate.addActionListener(new updateActionListener());
-		btnUpdate.setBounds(555, 96, 89, 23);
+		btnUpdate.setBounds(80, 398, 89, 23);
 		contentPane.add(btnUpdate);
 		
 		JButton btnXa = new JButton("Xóa");
 		btnXa.addActionListener(new deleteActionListener());
-		btnXa.setBounds(555, 151, 89, 23);
+		btnXa.setBounds(201, 399, 89, 23);
 		
 		contentPane.add(btnXa);
+		
+		txtPhone = new JTextField();
+		txtPhone.setBounds(767, 220, 149, 20);
+		contentPane.add(txtPhone);
+		txtPhone.setColumns(10);
+		
+		txtName = new JTextField();
+		txtName.setColumns(10);
+		txtName.setBounds(767, 251, 149, 20);
+		contentPane.add(txtName);
+		
+		txtAddress = new JTextField();
+		txtAddress.setColumns(10);
+		txtAddress.setBounds(767, 282, 149, 20);
+		contentPane.add(txtAddress);
+		
+		txtNote = new JTextField();
+		txtNote.setColumns(10);
+		txtNote.setBounds(767, 320, 149, 20);
+		contentPane.add(txtNote);
+		
+		JLabel lblSinThoi = new JLabel("Số điện thoại");
+		lblSinThoi.setBounds(661, 220, 78, 20);
+		contentPane.add(lblSinThoi);
+		
+		JLabel lblTn = new JLabel("Tên");
+		lblTn.setBounds(661, 254, 78, 20);
+		contentPane.add(lblTn);
+		
+		JLabel lblaCh = new JLabel("Địa  chỉ");
+		lblaCh.setBounds(661, 285, 78, 20);
+		contentPane.add(lblaCh);
+		
+		JLabel lblGhiCh = new JLabel("Ghi chú");
+		lblGhiCh.setBounds(661, 323, 78, 20);
+		contentPane.add(lblGhiCh);
+		
+		txtFind = new JTextField();
+		txtFind.setText("0");
+		txtFind.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String keyPhone = txtFind.getText();
+				if (!keyPhone.isEmpty()) {
+					
+				}
+			}
+		});
+		txtFind.setBounds(661, 39, 165, 20);
+		contentPane.add(txtFind);
+		txtFind.setColumns(10);
+		
+		JButton btnFind = new JButton("Find");
+		btnFind.addActionListener(new findActionListener());
+		btnFind.setBounds(836, 38, 70, 20);
+		contentPane.add(btnFind);
 	}
 }

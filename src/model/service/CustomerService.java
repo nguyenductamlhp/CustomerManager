@@ -54,14 +54,29 @@ public class CustomerService {
 		return false;
 	}
 	
-	public Customer getCustomer(String phone) throws SQLException {
+	public List<Customer> findCustomer(String phone) {
+		List<Customer> customerList = getAllCustomer();
+		List<Customer> reList = new ArrayList<>();
+		
+		for (Customer customer : customerList) {
+			if (customer.getPhone().contains(phone.trim())) {
+				reList.add(customer);
+			}
+		
+		}
+		return reList;
+	}
+	
+	public int getCustomer(String phone) throws SQLException {
 		List<Customer> CustomerList = getAllCustomer();
+		int i = 0;
 		for (Customer customer : CustomerList) {
 			if (customer.getPhone().equals(phone)) {
-				return customer;
+				return i;
 			}
+			i++;
 		}
-		return null;
+		return -1;
 	}
 
 	public boolean updateCustomer(Customer c) {
@@ -97,7 +112,7 @@ public class CustomerService {
 		ConnectionPool connectionPool = new ConnectionPool();
 		Connection connection;
 		try {
-			if (isExist(c.getPhone())) {
+			if (isExist(c.getPhone()) || c.getPhone().equals("")) {
 				return false;
 			} else {
 				connection = connectionPool.getConnection();
